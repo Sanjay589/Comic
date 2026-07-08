@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ComicCraft AI — AI-Powered Comic Creation Platform
 
-## Getting Started
+ComicCraft AI is a complete, production-ready full-stack application that transforms text prompts and user scenarios into fully designed, structured comic books. It combines Gemini's advanced text and image generation models with a premium interactive comic book editor (Comic Studio).
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **AI Story Generation:** Enter a short story idea, select style parameters (Genre, Tone, Style, Target Audience), and generate structured page segments, dialogues, camera instructions, and visual layout plans.
+- **Scene Editor:** Manipulate and fine-tune each generated scene (reorder, duplicate, add custom dialogue, or request AI rewrites/re-themes).
+- **Character Creator & Consistency DNA:** Define characters with visual attributes (face shape, hair color, skin tone). Lock features to construct Character DNA, ensuring consistent appearance in generated panel images.
+- **Comic Studio Canvas:** Position, resize, rotate, and layer panels. Add custom speech bubbles, thought clouds, narration labels, and SFX tags using a high-fidelity Konva.js drawing canvas.
+- **Autosave & History:** Integrated undo/redo stacks, and debounced background autosaving.
+- **Exporting:** Compile and download final creations as high-resolution PNG grids or multi-page PDF documents.
+
+## Technology Stack
+
+- **Framework:** Next.js 15 (App Router with dynamic turbopack compilation)
+- **Language:** strict TypeScript
+- **Styling:** Tailwind CSS 4 with custom halftone background textures, comic borders, and responsive layouts
+- **Drawing Canvas:** React Konva + Konva.js
+- **Icons:** Lucide React
+- **Exporting:** jsPDF
+- **Validation:** Zod schemas
+
+## Local Setup
+
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Environment Variables:**
+   Create a `.env.local` file using the template in `.env.example`:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key
+   GEMINI_TEXT_MODEL=gemini-2.5-flash
+   GEMINI_IMAGE_MODEL=gemini-2.0-flash-preview-image-generation
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   ```
+
+3. **Database Migrations:**
+   Run migrations against your Supabase Postgres instances to create the tables:
+   - `profiles`
+   - `comic_projects`
+   - `story_versions`
+   - `comic_scenes`
+   - `scene_versions`
+   - `comic_characters`
+   - `character_versions`
+   - `comic_pages`
+   - `comic_panels`
+   - `generation_jobs`
+   - `project_exports`
+
+4. **Run the Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application in the browser.
+
+## Database Schema & Row Level Security
+
+All tables are protected under PostgreSQL Row Level Security (RLS) policies:
+```sql
+ALTER TABLE comic_projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can only access their own projects"
+  ON comic_projects
+  FOR ALL
+  USING (auth.uid() = user_id);
+```
+Updates triggers are enabled on all tables to automatically track modifications using database procedures:
+```sql
+CREATE TRIGGER update_comic_projects_modtime
+  BEFORE UPDATE ON comic_projects
+  FOR EACH ROW
+  EXECUTE FUNCTION update_modified_column();
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Testing
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run lint checks and compile tests using:
+```bash
+npm run lint
+npx tsc --noEmit
+```
+Both steps compile successfully with zero errors.
